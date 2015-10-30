@@ -56,6 +56,8 @@
 #include <sys/utsname.h>        /* uname() */
 
 
+#define NGX_HAVE_EVENTFD 0
+
 #include <ngx_auto_config.h>
 
 
