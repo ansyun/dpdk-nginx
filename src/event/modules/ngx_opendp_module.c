@@ -45,33 +45,69 @@
 #define ODP_FD_BITS 30
 
 
-static int inited = 0;
+static int inited;
+
+static int (*real_close)(int);
+static int (*real_socket)(int, int, int);
+static int (*real_bind)(int, __CONST_SOCKADDR_ARG, socklen_t);
+static int (*real_listen)(int, int);
+
+static int (*real_setsockopt)(int, int, int, const void *, socklen_t);
+
+static int (*real_ioctl)(int, int, void *);
+
+static int (*real_epoll_create)(int);
+static int (*real_epoll_ctl)(int, int, int, struct epoll_event *);
+static int (*real_epoll_wait)(int, struct epoll_event *, int, int);
+
 void ngx_opendp_init()
 {
     int rc;
+        
+#define INIT_FUNCTION(func) \
+        real_##func = dlsym(RTLD_NEXT, #func); \
+        assert(real_##func)
+
+    INIT_FUNCTION(socket);
+    INIT_FUNCTION(bind);
+    INIT_FUNCTION(close);
+    INIT_FUNCTION(listen);
+    
+    INIT_FUNCTION(setsockopt);
+
+    INIT_FUNCTION(ioctl);
+
+    INIT_FUNCTION(epoll_create);
+    INIT_FUNCTION(epoll_ctl);
+    INIT_FUNCTION(epoll_wait);
+/*    INIT_FUNCTION();
+    INIT_FUNCTION();
+    INIT_FUNCTION();
+    INIT_FUNCTION();
+    INIT_FUNCTION();
+    INIT_FUNCTION();
+    INIT_FUNCTION();
+    INIT_FUNCTION();*/
+
+#undef INIT_FUNCTION
+
     rc = netdpsock_init(NULL);
     assert(0 == rc);
+
     inited = 1;
 }
 
 int socket(int domain, int type, int protocol)
 {
     int rc;
-    static int (*real_socket)(int, int, int) = NULL;
     
-    if (!real_socket) {
-        real_socket = dlsym(RTLD_NEXT, "socket");
-    }
-
     if (AF_INET != domain || SOCK_STREAM != type) {
         return real_socket(domain, type, protocol);
     }
 
     assert(inited);
     rc = netdpsock_socket(domain, type, protocol);
-    if (rc >= 0) {
-        rc |= 1 << ODP_FD_BITS;
-    }
+    rc |= 1 << ODP_FD_BITS;
         
     return rc;
 }
@@ -84,7 +120,12 @@ int socketpair (int __domain, int __type, int __protocol,
 
 int bind (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len)
 {
-    return -1;
+    if (__fd & (1 << ODP_FD_BITS)) {
+        __fd &= ~(1 << ODP_FD_BITS);
+        return netdpsock_bind(__fd, __addr, __len);
+    } else {
+        return real_bind(__fd, __addr, __len);
+    }
 }
 
 int getsockname (int __fd, __SOCKADDR_ARG __addr,
@@ -149,12 +190,22 @@ int getsockopt (int __fd, int __level, int __optname,
 int setsockopt (int __fd, int __level, int __optname,
                const void *__optval, socklen_t __optlen)
 {
-    return -1;
+    if (__fd & (1 << ODP_FD_BITS)) {
+        __fd &= ~(1 << ODP_FD_BITS);
+        return netdpsock_setsockopt(__fd, __level, __optname, __optval, __optlen);
+    } else {
+        return real_setsockopt(__fd, __level, __optname, __optval, __optlen);
+    }
 }
 
 int listen (int __fd, int __n)
 {
-    return -1;
+    if (__fd & (1 << ODP_FD_BITS)) {
+        __fd &= ~(1 << ODP_FD_BITS);
+        return netdpsock_listen(__fd, __n);
+    } else {
+        return real_listen(__fd, __n);
+    }
 }
 
 int accept (int __fd, __SOCKADDR_ARG __addr,
@@ -176,12 +227,6 @@ int shutdown (int __fd, int __how)
 
 int close(int fd)
 {
-    static int (*real_close)(int) = NULL;
-
-    if (!real_close) {
-        real_close = dlsym(RTLD_NEXT, "close");
-    }
-
     if (fd & (1 << ODP_FD_BITS)) {
         fd &= ~(1 << ODP_FD_BITS);
         return netdpsock_close(fd);
@@ -192,7 +237,15 @@ int close(int fd)
 
 int epoll_create (int __size)
 {
-    return -1;
+    int rc;
+
+    if (__size > 1) {
+        rc = netdpsock_epoll_create(__size);
+        rc |= 1 << ODP_FD_BITS;
+    } else {
+        rc = real_epoll_create(__size);
+    }
+    return rc;
 }
 
 int epoll_create1 (int __flags)
@@ -203,13 +256,32 @@ int epoll_create1 (int __flags)
 int epoll_ctl (int __epfd, int __op, int __fd,
               struct epoll_event *__event)
 {
-    return -1;
+    int rc;
+
+    if (__epfd & (1 << ODP_FD_BITS)) {
+        __epfd &= ~(1 << ODP_FD_BITS);
+        assert(__fd & (1 << ODP_FD_BITS));
+        __fd &= ~(1 << ODP_FD_BITS);
+        rc = netdpsock_epoll_ctl(__epfd, __op, __fd, __event);
+    } else {
+        assert(!(__fd & (1 << ODP_FD_BITS)));
+        rc = real_epoll_ctl(__epfd, __op, __fd, __event);
+    }
+    return rc;
 }
 
 int epoll_wait (int __epfd, struct epoll_event *__events,
                int __maxevents, int __timeout)
 {
-    return -1;
+    int rc;
+
+    if (__epfd & (1 << ODP_FD_BITS)) {
+        __epfd &= ~(1 << ODP_FD_BITS);
+        rc = netdpsock_epoll_wait(__epfd, __events, __maxevents, __timeout);
+    } else {
+        rc = real_epoll_wait(__epfd, __events, __maxevents, __timeout);
+    }
+    return rc;
 }
 
 int epoll_pwait (int __epfd, struct epoll_event *__events,
@@ -221,7 +293,19 @@ int epoll_pwait (int __epfd, struct epoll_event *__events,
 
 
 // fcntl
-// ioctl
+
+int ioctl(int fd, int request, void *p)
+{
+    if (fd & (1 << ODP_FD_BITS)) {
+        fd &= ~(1 << ODP_FD_BITS);
+        //return netdpsock_ioctl(fd, request, p);
+        return 0;
+    } else {
+        return real_ioctl(fd, request, p);
+    }
+}
+
+
 // read
 // write
 // sendfile
