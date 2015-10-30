@@ -51,6 +51,7 @@ static int (*real_close)(int);
 static int (*real_socket)(int, int, int);
 static int (*real_bind)(int, __CONST_SOCKADDR_ARG, socklen_t);
 static int (*real_listen)(int, int);
+static int (*real_accept4)(int, struct sockaddr *, socklen_t *, int);
 
 static int (*real_setsockopt)(int, int, int, const void *, socklen_t);
 
@@ -72,6 +73,7 @@ void ngx_opendp_init()
     INIT_FUNCTION(bind);
     INIT_FUNCTION(close);
     INIT_FUNCTION(listen);
+    INIT_FUNCTION(accept4);
     
     INIT_FUNCTION(setsockopt);
 
@@ -101,7 +103,7 @@ int socket(int domain, int type, int protocol)
 {
     int rc;
     
-    if (AF_INET != domain || SOCK_STREAM != type) {
+    if (AF_INET != domain || (SOCK_STREAM != type && SOCK_DGRAM != type)) {
         return real_socket(domain, type, protocol);
     }
 
@@ -217,7 +219,16 @@ int accept (int __fd, __SOCKADDR_ARG __addr,
 int accept4(int sockfd, struct sockaddr *addr,
                socklen_t *addrlen, int flags)
 {
-    return -1;
+    int rc;
+
+    if (sockfd & (1 << ODP_FD_BITS)) {
+        sockfd &= ~(1 << ODP_FD_BITS);
+        rc = netdpsock_accept(sockfd, addr, addrlen);
+        rc |= 1 << ODP_FD_BITS;
+    } else {
+        rc = real_accept4(sockfd, addr, addrlen, flags);
+    }
+    return rc;
 }
 
 int shutdown (int __fd, int __how)
