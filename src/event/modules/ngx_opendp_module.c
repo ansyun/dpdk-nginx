@@ -52,6 +52,10 @@ static int (*real_socket)(int, int, int);
 static int (*real_bind)(int, __CONST_SOCKADDR_ARG, socklen_t);
 static int (*real_listen)(int, int);
 static int (*real_accept4)(int, struct sockaddr *, socklen_t *, int);
+static ssize_t (*real_recv)(int, void *, size_t, int);
+static ssize_t (*real_send)(int, const void *, size_t, int);
+
+static ssize_t (*real_writev)(int, const struct iovec *, int);
 
 static int (*real_setsockopt)(int, int, int, const void *, socklen_t);
 
@@ -74,7 +78,11 @@ void ngx_opendp_init()
     INIT_FUNCTION(close);
     INIT_FUNCTION(listen);
     INIT_FUNCTION(accept4);
+    INIT_FUNCTION(recv);
+    INIT_FUNCTION(send);
     
+    INIT_FUNCTION(writev);
+
     INIT_FUNCTION(setsockopt);
 
     INIT_FUNCTION(ioctl);
@@ -149,12 +157,22 @@ int getpeername (int __fd, __SOCKADDR_ARG __addr,
 
 ssize_t send (int __fd, const void *__buf, size_t __n, int __flags)
 {
-    return -1;
+    if (__fd & (1 << ODP_FD_BITS)) {
+        __fd &= ~(1 << ODP_FD_BITS);
+        return netdpsock_send(__fd, __buf, __n, __flags);
+    } else {
+        return real_send(__fd, __buf, __n, __flags);
+    }
 }
 
 ssize_t recv (int __fd, void *__buf, size_t __n, int __flags)
 {
-    return -1;
+    if (__fd & (1 << ODP_FD_BITS)) {
+        __fd &= ~(1 << ODP_FD_BITS);
+        return netdpsock_recv(__fd, __buf, __n, __flags);
+    } else {
+        return real_recv(__fd, __buf, __n, __flags);
+    }
 }
 
 ssize_t sendto (int __fd, const void *__buf, size_t __n,
@@ -224,6 +242,7 @@ int accept4(int sockfd, struct sockaddr *addr,
     if (sockfd & (1 << ODP_FD_BITS)) {
         sockfd &= ~(1 << ODP_FD_BITS);
         rc = netdpsock_accept(sockfd, addr, addrlen);
+        addr->sa_family = AF_INET;
         rc |= 1 << ODP_FD_BITS;
     } else {
         rc = real_accept4(sockfd, addr, addrlen, flags);
@@ -320,5 +339,25 @@ int ioctl(int fd, int request, void *p)
 // read
 // write
 // sendfile
+
+
+ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
+{
+    ssize_t rc, i, n;
+
+    if (fd & (1 << ODP_FD_BITS)) {
+        fd &= ~(1 << ODP_FD_BITS);
+        rc = 0;
+        for (i = 0; i != iovcnt; ++i) {
+            n = netdpsock_send(fd, iov[i].iov_base, iov[i].iov_len, 0);
+            if (n <= 0) return n;
+            rc += n;
+        }
+    } else {
+        rc = real_writev(fd, iov, iovcnt);
+    }
+    return rc;
+}
+
 
 
