@@ -54,6 +54,7 @@ static int (*real_listen)(int, int);
 static int (*real_accept4)(int, struct sockaddr *, socklen_t *, int);
 static ssize_t (*real_recv)(int, void *, size_t, int);
 static ssize_t (*real_send)(int, const void *, size_t, int);
+static int (*real_shutdown)(int, int);
 
 static ssize_t (*real_writev)(int, const struct iovec *, int);
 
@@ -80,6 +81,7 @@ void ngx_opendp_init()
     INIT_FUNCTION(accept4);
     INIT_FUNCTION(recv);
     INIT_FUNCTION(send);
+    INIT_FUNCTION(shutdown);
     
     INIT_FUNCTION(writev);
 
@@ -91,7 +93,6 @@ void ngx_opendp_init()
     INIT_FUNCTION(epoll_ctl);
     INIT_FUNCTION(epoll_wait);
 /*    INIT_FUNCTION();
-    INIT_FUNCTION();
     INIT_FUNCTION();
     INIT_FUNCTION();
     INIT_FUNCTION();
@@ -167,9 +168,14 @@ ssize_t send (int __fd, const void *__buf, size_t __n, int __flags)
 
 ssize_t recv (int __fd, void *__buf, size_t __n, int __flags)
 {
+    ssize_t rc;
     if (__fd & (1 << ODP_FD_BITS)) {
         __fd &= ~(1 << ODP_FD_BITS);
-        return netdpsock_recv(__fd, __buf, __n, __flags);
+        rc = netdpsock_recv(__fd, __buf, __n, __flags);
+        if (-1 == rc && NETDP_EAGAIN == errno) {
+            errno = EAGAIN;
+        }
+        return rc;
     } else {
         return real_recv(__fd, __buf, __n, __flags);
     }
@@ -244,15 +250,24 @@ int accept4(int sockfd, struct sockaddr *addr,
         rc = netdpsock_accept(sockfd, addr, addrlen);
         addr->sa_family = AF_INET;
         rc |= 1 << ODP_FD_BITS;
+        if (-1 == rc && NETDP_EAGAIN == errno) {
+            errno = EAGAIN;
+        }
     } else {
         rc = real_accept4(sockfd, addr, addrlen, flags);
     }
     return rc;
 }
 
-int shutdown (int __fd, int __how)
+int shutdown (int fd, int how)
 {
-    return -1;
+    if (fd & (1 << ODP_FD_BITS)) {
+        fd &= ~(1 << ODP_FD_BITS);
+        //netdpsock_close(fd);
+        return 0;
+    } else {
+        return real_shutdown(fd, how);
+    }
 }
 
 int close(int fd)
