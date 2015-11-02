@@ -17,17 +17,12 @@ mkdir -p $NGX_OBJS/src/core $NGX_OBJS/src/event $NGX_OBJS/src/event/modules \
 ngx_objs_dir=$NGX_OBJS$ngx_regex_dirsep
 ngx_use_pch=`echo $NGX_USE_PCH | sed -e "s/\//$ngx_regex_dirsep/g"`
 
-if [ $RTE_ODP ];
-then
+if [ $RTE_SDK ] && [ $RTE_TARGET ] && [ $RTE_ODP ]; then
     ODP_PATH=$RTE_ODP
 else
-    echo "Please define RTE_SDK environment variable"
+    echo "Please define RTE_SDK RTE_TARGET RTE_ODP environment variable"
     exit 1
 fi
-
-#ifeq ($RTE_ODP,)
-#$(error "Please define RTE_ODP environment variable")
-#endif
 
 
 CORE_LIBS="$CORE_LIBS $ODP_PATH/librte_netdpsock/librte_netdpsock.a $RTE_SDK/$RTE_TARGET/lib/librte_eal.a $RTE_SDK/$RTE_TARGET/lib/librte_mempool.a $RTE_SDK/$RTE_TARGET/lib/librte_ring.a"
