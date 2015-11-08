@@ -359,16 +359,52 @@ int ioctl(int fd, int request, void *p)
 ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
 {
     ssize_t rc, i, n;
+    int nwrite, data_size;
+    char *buf;
 
-    if (fd & (1 << ODP_FD_BITS)) {
+    if (fd & (1 << ODP_FD_BITS)) 
+    {
         fd &= ~(1 << ODP_FD_BITS);
         rc = 0;
-        for (i = 0; i != iovcnt; ++i) {
-            n = netdpsock_send(fd, iov[i].iov_base, iov[i].iov_len, 0);
-            if (n <= 0) return n;
-            rc += n;
+        for (i = 0; i != iovcnt; ++i) 
+        {
+            data_size = iov[i].iov_len;
+            buf = iov[i].iov_base;
+            n = data_size;
+            while (n > 0) 
+            {
+                nwrite = netdpsock_send(fd, buf + data_size - n, n, 0);  
+
+                if(nwrite<=0) 
+                {   
+                    if(errno==NETDP_EAGAIN)  
+                    {  
+                        usleep(200);  /* no space in netdp stack */
+                        continue;  
+                    }  
+                    else 
+                    {  
+                        printf("write error: errno = %d, strerror = %s \n" , errno, strerror(errno));  
+                        return(nwrite);  
+                    }  
+                }  
+
+                if (nwrite < n) 
+                {
+                    usleep(200);/* no space in netdp stack */
+                }
+                n -= nwrite;
+                
+            }
+
+            if (nwrite <= 0) 
+                return nwrite;
+            
+            rc += data_size;
         }
-    } else {
+    }
+    else 
+    {
         rc = real_writev(fd, iov, iovcnt);
     }
     return rc;
