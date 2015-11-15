@@ -158,10 +158,48 @@ int getpeername (int __fd, __SOCKADDR_ARG __addr,
 
 ssize_t send (int __fd, const void *__buf, size_t __n, int __flags)
 {
-    if (__fd & (1 << ODP_FD_BITS)) {
+    ssize_t n;
+    int nwrite, data_size;
+    char *buf;
+
+    if (__fd & (1 << ODP_FD_BITS))
+    {
         __fd &= ~(1 << ODP_FD_BITS);
-        return netdpsock_send(__fd, __buf, __n, __flags);
-    } else {
+
+        data_size = __n;
+        n = __n;
+        buf = (char *)__buf;
+        while (n > 0) 
+        {
+            nwrite = netdpsock_send(__fd, buf + data_size - n, n, 0);  
+
+            if(nwrite<=0) 
+            {   
+                if(errno==NETDP_EAGAIN)  
+                {  
+                    usleep(200);  /* no space in netdp stack */
+                    continue;  
+                }  
+                else 
+                {  
+                    printf("write error: errno = %d, strerror = %s \n" , errno, strerror(errno));  
+                    return(nwrite);  
+                }  
+            }  
+
+            if (nwrite < n) 
+            {
+                usleep(200);/* no space in netdp stack */
+            }
+            n -= nwrite;
+            
+        }
+
+        return __n;
+
+    }
+    else 
+    {
         return real_send(__fd, __buf, __n, __flags);
     }
 }
