@@ -14,6 +14,7 @@ dpdk-nginx fork from official nginx-1.9.5, and run on the dpdk user space TCP/IP
 
 ####Testing
 --------------
+Notes：These test run on VM, they are function testing, not performance testing.
 *  Startup netdp TCP/IP stack
 ```
 $ sudo ./build/opendp -c 0x1 -n 1  -- -p 0x1 --config="(0,0,0)"
