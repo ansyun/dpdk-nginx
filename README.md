@@ -4,14 +4,37 @@ dpdk-nginx fork from official nginx-1.9.5, and run on the dpdk user space TCP/IP
 
 ####build and install
 --------------
-*  Downlaod latest dpdk version from [dpdk website](http://dpdk.org/)
-*  git clone https://github.com/opendp/dpdk-odp.git
+*  Download latest dpdk version from [dpdk website](http://dpdk.org/)
+```
+$ make config T=x86_64-native-linuxapp-gcc
+$ make install T=x86_64-native-linuxapp-gcc
+$ export RTE_SDK=/home/mytest/dpdk
+$ export RTE_TARGET=x86_64-native-linuxapp-gcc
+```
 *  Build dpdk and opendp following the [opendp wiki](https://github.com/opendp/dpdk-odp/wiki/Compile-APP-with-netdp) 
-*  git clone https://github.com/opendp/dpdk-nginx.git
-*  ./configure
-*  make
-*  make install   # default install dir is /usr/local/nginx
+```
+$ git clone https://github.com/opendp/dpdk-odp.git
+$ export RTE_ODP=/home/mytest/dpdk-odp
+$ make
+$ sudo ./build/opendp -c 0x1 -n 1  -- -p 0x1 --config="(0,0,0)"
+EAL: Detected lcore 0 as core 0 on socket 0
+EAL: Detected lcore 1 as core 1 on socket 0
+EAL: Support maximum 128 logical core(s) by configuration.
+EAL: Detected 2 lcore(s)
+EAL: VFIO modules not all loaded, skip VFIO support...
+EAL: Setting up physically contiguous memory...
+EAL: Ask a virtual area of 0x400000 bytes
+EAL: Virtual area found at 0x7fdf90c00000 (size = 0x400000)
+EAL: Ask a virtual area of 0x15400000 bytes
+```
+*  Download dpdk-nginx, build dpdk-nginx
 
+```
+$ git clone https://github.com/opendp/dpdk-nginx.git
+$ ./configure
+$ make
+$ make install   # default install dir is /usr/local/nginx
+```
 ####Testing
 --------------
 Notes：These test run on VM, they are function testing, not performance testing.
