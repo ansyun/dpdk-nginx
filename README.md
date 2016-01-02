@@ -31,7 +31,7 @@ EAL: Ask a virtual area of 0x15400000 bytes
 
 ```
 $ git clone https://github.com/opendp/dpdk-nginx.git
-$ ./configure
+$ ./configure  --with-http_dav_module
 $ make
 $ make install   # default install dir is /usr/local/nginx
 ```
@@ -60,62 +60,85 @@ EAL: Detected lcore 1 as core 1 on socket 0
 ```
 *  Test http connection by ab tool
 ```
-$ sudo ab -n 100000 -c 800  -t 200 2.2.2.2:80/
+CPU:Intel(R) Xeon(R) CPU E5-2430 0 @ 2.20GHz.
+NIC:Intel Corporation 82576 Gigabit Network Connection (rev 01) 
+OPENDP run on a lcore.
+
+root@h163:~# ab -n 30000 -c 500 2.2.2.2:80/
+This is ApacheBench, Version 2.3 <$Revision: 1528965 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
 Benchmarking 2.2.2.2 (be patient)
-Completed 5000 requests
-Completed 10000 requests
+Completed 3000 requests
+Completed 6000 requests
+Completed 9000 requests
+Completed 12000 requests
 Completed 15000 requests
-Completed 20000 requests
-Completed 25000 requests
+Completed 18000 requests
+Completed 21000 requests
+Completed 24000 requests
+Completed 27000 requests
 Completed 30000 requests
-Completed 35000 requests
-Completed 40000 requests
-Completed 45000 requests
-Completed 50000 requests
-Finished 50000 requests
+Finished 30000 requests
+
+
 Server Software:        nginx/1.9.5
 Server Hostname:        2.2.2.2
 Server Port:            80
+
 Document Path:          /
 Document Length:        612 bytes
-Concurrency Level:      800
-Time taken for tests:   41.034 seconds
-Complete requests:      50000
+
+Concurrency Level:      500
+Time taken for tests:   0.965 seconds
+Complete requests:      30000
 Failed requests:        0
-Total transferred:      42200000 bytes
-HTML transferred:       30600000 bytes
-Requests per second:    1218.51 [#/sec] (mean)
-Time per request:       656.540 [ms] (mean)
-Time per request:       0.821 [ms] (mean, across all concurrent requests)
-Transfer rate:          1004.32 [Kbytes/sec] received
+Total transferred:      25320000 bytes
+HTML transferred:       18360000 bytes
+Requests per second:    31092.43 [#/sec] (mean)
+Time per request:       16.081 [ms] (mean)
+Time per request:       0.032 [ms] (mean, across all concurrent requests)
+Transfer rate:          25626.97 [Kbytes/sec] received
+
 Connection Times (ms)
               min  mean[+/-sd] median   max
-Connect:        0  537 411.7    211    1150
-Processing:     0  110  93.3    164     330
-Waiting:        0  110  93.3    164     330
-Total:        110  648 322.1    422    1320
+Connect:        0    2   1.1      1       7
+Processing:     2   14   5.1     14      30
+Waiting:        2   14   5.0     14      29
+Total:          4   16   4.7     16      30
+
 Percentage of the requests served within a certain time (ms)
-  50%    422
-  66%   1001
-  75%   1003
-  80%   1005
-  90%   1011
-  95%   1021
-  98%   1039
-  99%   1098
- 100%   1320 (longest request)
+  50%     16
+  66%     18
+  75%     19
+  80%     20
+  90%     22
+  95%     24
+  98%     25
+  99%     27
+ 100%     30 (longest request)
 
 ```
 *  Test file download by wget tool
 ```
-$ wget http://2.2.2.2/nginx_test_file
---2015-11-09 19:17:04--  http://2.2.2.2/nginx_test_file
+CPU:Intel(R) Xeon(R) CPU E5-2430 0 @ 2.20GHz.
+NIC:Intel Corporation 82576 Gigabit Network Connection (rev 01) 
+OPENDP run on a lcore.
+
+root@h163:~# wget http://2.2.2.2/nginx_big_data
+--2016-01-02 20:58:24--  http://2.2.2.2/nginx_big_data
 Connecting to 2.2.2.2:80... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 44046102 (42M) [application/octet-stream]
-Saving to: ‘nginx_test_file.2’
-100%[============================================>] 44,046,102  31.7MB/s   in 1.3s
-2015-11-09 19:17:05 (31.7 MB/s) - ‘nginx_test_file.2’ saved [44046102/44046102]
+Saving to: ‘nginx_big_data.1’
+
+100%[=====================================>] 44,046,102   111MB/s   in 0.4s
+
+2016-01-02 20:58:24 (111 MB/s) - ‘nginx_big_data.1’ saved [44046102/44046102]
+
+root@h163:~#
+
 
 ```
 
