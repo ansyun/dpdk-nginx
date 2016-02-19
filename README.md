@@ -138,8 +138,6 @@ Saving to: ‘nginx_big_data.1’
 2016-01-02 20:58:24 (111 MB/s) - ‘nginx_big_data.1’ saved [44046102/44046102]
 
 root@h163:~#
-
-
 ```
 ####Notes
 * netdp tcp stack support reuseport, so can enable nginx reuseport feature, multi nginx can listen on same port.
