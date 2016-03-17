@@ -144,4 +144,4 @@ root@h163:~#
 
 ####Support
 -------
-For free support, please use netdp team mail list at zimeiw@163.com. or QQ Group:86883521
+For free support, please use netdp team mail list at zimeiw@163.com, or QQ Group:86883521, or https://dpdk-odp.slack.com.
