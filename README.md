@@ -141,6 +141,7 @@ root@h163:~#
 ```
 ####Notes
 * netdp tcp stack support reuseport, so can enable nginx reuseport feature, multi nginx can listen on same port.
+* proxy_pass is supported.
 
 ####Support
 -------
