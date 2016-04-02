@@ -59,6 +59,7 @@ static int inited = 0;
 static int (*real_close)(int);
 static int (*real_socket)(int, int, int);
 static int (*real_bind)(int, const struct sockaddr*, socklen_t);
+static int (*real_connect)(int, const struct sockaddr*, socklen_t);
 static int (*real_listen)(int, int);
 static int (*real_accept)(int, struct sockaddr *, socklen_t *);
 static int (*real_accept4)(int, struct sockaddr *, socklen_t *, int);
@@ -69,6 +70,7 @@ static int (*real_shutdown)(int, int);
 static ssize_t (*real_writev)(int, const struct iovec *, int);
 static ssize_t (*real_write)(int, const void *, size_t );
 static ssize_t (*real_read)(int, void *, size_t );
+static ssize_t (*real_readv)(int, const struct iovec *, int);
 
 static int (*real_setsockopt)(int, int, int, const void *, socklen_t);
 
@@ -94,6 +96,7 @@ void opendp_init()
 
     INIT_FUNCTION(socket);
     INIT_FUNCTION(bind);
+    INIT_FUNCTION(connect);
     INIT_FUNCTION(close);
     INIT_FUNCTION(listen);
     INIT_FUNCTION(accept);
@@ -105,6 +108,7 @@ void opendp_init()
     INIT_FUNCTION(writev);
     INIT_FUNCTION(write);
     INIT_FUNCTION(read);
+    INIT_FUNCTION(readv);
 
     INIT_FUNCTION(setsockopt);
 
@@ -113,13 +117,15 @@ void opendp_init()
     INIT_FUNCTION(epoll_create);
     INIT_FUNCTION(epoll_ctl);
     INIT_FUNCTION(epoll_wait);
-/*    INIT_FUNCTION();
+   /*    
     INIT_FUNCTION();
     INIT_FUNCTION();
     INIT_FUNCTION();
     INIT_FUNCTION();
     INIT_FUNCTION();
-    INIT_FUNCTION();*/
+    INIT_FUNCTION();
+    INIT_FUNCTION();
+    */
 
 #undef INIT_FUNCTION
 
@@ -206,9 +212,21 @@ int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
  * @return  
  *
  */
-int getsockname (__attribute__((unused))int __fd, __attribute__((unused))__SOCKADDR_ARG __addr, __attribute__((unused)) socklen_t *__restrict __len)
+int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
-    return -1;
+
+    ODP_FD_DEBUG("fd(%d) start to connect \n", sockfd);
+
+    if (sockfd > ODP_FD_BASE) 
+    {
+        sockfd -= ODP_FD_BASE;
+        return netdpsock_connect(sockfd, addr, addrlen);
+    } 
+    else 
+    {
+        return real_connect(sockfd, addr, addrlen);
+    }
+    
 }
 
 /**
@@ -217,7 +235,7 @@ int getsockname (__attribute__((unused))int __fd, __attribute__((unused))__SOCKA
  * @return  
  *
  */
-int connect (__attribute__((unused))int __fd, __attribute__((unused))__CONST_SOCKADDR_ARG __addr, __attribute__((unused)) socklen_t __len)
+int getsockname (__attribute__((unused))int __fd, __attribute__((unused))__SOCKADDR_ARG __addr, __attribute__((unused)) socklen_t *__restrict __len)
 {
     return -1;
 }
@@ -239,25 +257,25 @@ int getpeername (__attribute__((unused))int __fd, __attribute__((unused)) __SOCK
  * @return  
  *
  */
-ssize_t send (int __fd, const void *__buf, size_t __n, int __flags)
+ssize_t send (int sockfd, const void *buf, size_t len, int flags)
 {
     ssize_t n;
     int nwrite, data_size;
-    char *buf;
+    char *data_buf;
     
-    ODP_FD_DEBUG("send data fd %d , len %lu \n", __fd, __n);
+    ODP_FD_DEBUG("send data fd %d , len %lu \n", sockfd, len);
 
-    if (__fd > ODP_FD_BASE) 
+    if (sockfd > ODP_FD_BASE) 
     {
-        __fd -= ODP_FD_BASE;
-        ODP_FD_DEBUG("netdp send data fd %d , len %lu \n", __fd, __n);
+        sockfd -= ODP_FD_BASE;
+        ODP_FD_DEBUG("netdp send data fd %d , len %lu \n", sockfd, len);
 
-        data_size = __n;
-        n = __n;
-        buf = (char *)__buf;
+        data_size = len;
+        n = len;
+        data_buf = (char *)buf;
         while (n > 0) 
         {
-            nwrite = netdpsock_send(__fd, buf + data_size - n, n, 0);  
+            nwrite = netdpsock_send(sockfd, data_buf + data_size - n, n, 0);  
 
             if(nwrite<=0) 
             {   
@@ -281,14 +299,14 @@ ssize_t send (int __fd, const void *__buf, size_t __n, int __flags)
             
         }
 
-        return __n;
+        return len;
 
     }
     else 
     {
-        ODP_FD_DEBUG("linux send data fd %d , len %lu \n", __fd, __n);
+        ODP_FD_DEBUG("linux send data fd %d , len %lu \n", sockfd, len);
 
-        return real_send(__fd, __buf, __n, __flags);
+        return real_send(sockfd, buf, len, flags);
     }
 }
 
@@ -566,11 +584,13 @@ int accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags)
  */
 int shutdown (int fd, int how)
 {
+    ODP_FD_DEBUG("netdp shutdown fd %d, how %d,  pid %d \n", fd, how, getpid());
+
     if (fd > ODP_FD_BASE) 
     {
         fd -= ODP_FD_BASE;
-        //netdpsock_close(fd);
-        return 0;
+
+        return netdpsock_shutdown(fd, how);;
     } 
     else
     {
@@ -737,7 +757,8 @@ int ioctl(int fd, int request, void *p)
  */
 ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
 {
-    ssize_t rc, i, n;
+    ssize_t rc;
+    int i, n;
     int nwrite = 0, data_size;
     char *buf;
 
@@ -748,7 +769,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
         ODP_FD_DEBUG("netdp writev data fd %d , iovcnt %d \n", fd, iovcnt);
 
         rc = 0;
-        for (i = 0; i != iovcnt; ++i) 
+        for (i = 0; i < iovcnt; ++i) 
         {
             data_size = iov[i].iov_len;
             buf = iov[i].iov_base;
@@ -794,5 +815,64 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
     return rc;
 }
 
+/**
+ * @param 
+ *
+ * @return  
+ *
+ */
+ ssize_t readv(int fd, const struct iovec *iov, int iovcnt)
+{
+    int i;
+    int nread = 0, buf_len;
+    ssize_t rc;
+    char *buf;
 
+    if (fd > ODP_FD_BASE) 
+    {
+        fd -= ODP_FD_BASE;
+
+        ODP_FD_DEBUG("netdp fd %d readv with iovcnt %d \n", fd, iovcnt);
+
+        rc = 0;
+        for (i = 0; i < iovcnt; ++i) 
+        {
+            buf_len = iov[i].iov_len;
+            buf = iov[i].iov_base;
+            
+            nread = netdpsock_read(fd, buf, buf_len);
+            if(nread <= 0) 
+            {   
+                if(errno == NETDP_EAGAIN)  
+                {  
+                    errno = EAGAIN;
+                }  
+                else 
+                {  
+                    printf("readv error: rc=%ld, nread=%d,  errno=%d, strerror=%s \n", rc, nread, errno, strerror(errno));  
+                }  
+                return ((rc > 0)? rc : nread);  
+            }  
+
+            ODP_FD_DEBUG("netdp fd %d readv data len %d iov index %d \n", fd, nread, i);
+      
+            rc += nread;
+            
+        }
+
+        ODP_FD_DEBUG("netdp fd %d readv data len %ld \n", fd, rc);
+        
+        return rc;
+    } 
+    else
+    {
+        rc =real_readv(fd, iov, iovcnt);
+
+        return rc;
+    }
+
+
+}
+
+    
 
