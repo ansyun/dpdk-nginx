@@ -849,7 +849,8 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
                 }  
                 else 
                 {  
-                    printf("readv error: rc=%ld, nread=%d,  errno=%d, strerror=%s \n", rc, nread, errno, strerror(errno));  
+                    if(nread < 0)
+                        printf("readv error: rc=%ld, nread=%d,  errno=%d, strerror=%s \n", rc, nread, errno, strerror(errno));  
                 }  
                 return ((rc > 0)? rc : nread);  
             }  
