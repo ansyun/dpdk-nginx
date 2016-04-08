@@ -40,7 +40,7 @@ $ make install   # default install dir is /usr/local/nginx
 Notes：These test run on VM, they are function testing, not performance testing.
 *  Setup DPDK Environment
 
-Refer to[Getting Started Guide for Linux](http://dpdk.org/doc/guides/linux_gsg/quick_start.html)
+Refer to [Getting Started Guide for Linux](http://dpdk.org/doc/guides/linux_gsg/quick_start.html)
 
 *  Startup netdp TCP/IP stack
 ```
