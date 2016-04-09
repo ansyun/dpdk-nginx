@@ -1,6 +1,6 @@
 ####dpdk-nginx
 --------------
-dpdk-nginx fork from official nginx-1.9.5, and run on the dpdk user space TCP/IP stack(NETDP). For detail function, please refer to nginx official website(http://nginx.org/).
+dpdk-nginx fork from official nginx-1.9.5, and run on the dpdk user space TCP/IP stack(ANS). For detail function, please refer to nginx official website(http://nginx.org/).
 
 ####build and install
 --------------
@@ -11,12 +11,12 @@ $ make install T=x86_64-native-linuxapp-gcc
 $ export RTE_SDK=/home/mytest/dpdk
 $ export RTE_TARGET=x86_64-native-linuxapp-gcc
 ```
-*  Build dpdk and opendp following the [opendp wiki](https://github.com/opendp/dpdk-odp/wiki/Compile-APP-with-netdp) 
+*  Build dpdk and ANS following the [ANS wiki](https://github.com/opendp/dpdk-ans/wiki/Compile-APP-with-netdp) 
 ```
-$ git clone https://github.com/opendp/dpdk-odp.git
-$ export RTE_ODP=/home/mytest/dpdk-odp
+$ git clone https://github.com/opendp/dpdk-ans.git
+$ export RTE_ANS=/home/mytest/dpdk-ans
 $ make
-$ sudo ./build/opendp -c 0x1 -n 1  -- -p 0x1 --config="(0,0,0)"
+$ sudo ./build/ans -c 0x1 -n 1  -- -p 0x1 --config="(0,0,0)"
 EAL: Detected lcore 0 as core 0 on socket 0
 EAL: Detected lcore 1 as core 1 on socket 0
 EAL: Support maximum 128 logical core(s) by configuration.
@@ -42,9 +42,9 @@ Notes：These test run on VM, they are function testing, not performance testing
 
 Refer to [Getting Started Guide for Linux](http://dpdk.org/doc/guides/linux_gsg/quick_start.html)
 
-*  Startup netdp TCP/IP stack
+*  Startup ANS TCP/IP stack
 ```
-$ sudo ./build/opendp -c 0x1 -n 1  -- -p 0x1 --config="(0,0,0)"
+$ sudo ./build/ans -c 0x1 -n 1  -- -p 0x1 --config="(0,0,0)"
 EAL: Detected lcore 0 as core 0 on socket 0
 EAL: Detected lcore 1 as core 1 on socket 0
 EAL: Support maximum 128 logical core(s) by configuration.
@@ -66,7 +66,7 @@ EAL: Detected lcore 1 as core 1 on socket 0
 ```
 CPU:Intel(R) Xeon(R) CPU E5-2430 0 @ 2.20GHz.
 NIC:Intel Corporation 82576 Gigabit Network Connection (rev 01) 
-OPENDP run on a lcore.
+ANS run on a lcore.
 
 root@h163:~# ab -n 30000 -c 500 2.2.2.2:80/
 This is ApacheBench, Version 2.3 <$Revision: 1528965 $>
@@ -128,7 +128,7 @@ Percentage of the requests served within a certain time (ms)
 ```
 CPU:Intel(R) Xeon(R) CPU E5-2430 0 @ 2.20GHz.
 NIC:Intel Corporation 82576 Gigabit Network Connection (rev 01) 
-OPENDP run on a lcore.
+ANS run on a lcore.
 
 root@h163:~# wget http://2.2.2.2/nginx_big_data
 --2016-01-02 20:58:24--  http://2.2.2.2/nginx_big_data
@@ -144,9 +144,9 @@ Saving to: ‘nginx_big_data.1’
 root@h163:~#
 ```
 ####Notes
-* netdp tcp stack support reuseport, so can enable nginx reuseport feature, multi nginx can listen on same port.
+* ANS tcp stack support reuseport, so can enable nginx reuseport feature, multi nginx can listen on same port.
 * proxy_pass is supported.
 
 ####Support
 -------
-For free support, please use netdp team mail list at zimeiw@163.com, or QQ Group:86883521, or https://dpdk-odp.slack.com.
+For free support, please use ANS team mail list at zimeiw@163.com, or QQ Group:86883521, or https://dpdk-odp.slack.com.
