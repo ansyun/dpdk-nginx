@@ -46,11 +46,11 @@
 /* 1: redis socket will go through opendp stack, 0: go through linux stack */
 int ans_sock_enable = 1; 
 
-int ans_debug_flag = 0;
+int ansfd_debug_flag = 0;
 
 #define ANS_FD_DEBUG( fmt, args...)  \
   do {                                                           \
-    if(ans_debug_flag == 1)   \
+    if(ansfd_debug_flag == 1)   \
         printf(fmt ,  ## args);  \
   } while (0)
   
