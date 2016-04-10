@@ -25,7 +25,7 @@ else
 fi
 
 
-CORE_LIBS="$CORE_LIBS $ANS_PATH/librte_netdpsock/librte_netdpsock.a $RTE_SDK/$RTE_TARGET/lib/librte_mbuf.a $RTE_SDK/$RTE_TARGET/lib/librte_eal.a  $RTE_SDK/$RTE_TARGET/lib/librte_mempool.a $RTE_SDK/$RTE_TARGET/lib/librte_ring.a"
+CORE_LIBS="$CORE_LIBS $ANS_PATH/librte_anssock/librte_anssock.a $RTE_SDK/$RTE_TARGET/lib/librte_mbuf.a $RTE_SDK/$RTE_TARGET/lib/librte_eal.a  $RTE_SDK/$RTE_TARGET/lib/librte_mempool.a $RTE_SDK/$RTE_TARGET/lib/librte_ring.a"
 CORE_LIBS="$CORE_LIBS $NGX_LIBDL -lrt"
 
 cat << END                                                     > $NGX_MAKEFILE
@@ -36,8 +36,8 @@ CPP =	$CPP
 LINK =  $LINK 
 
 
-CFLAGS += -I$ANS_PATH/librte_netdp/include
-CFLAGS += -I$ANS_PATH/librte_netdpsock/include
+CFLAGS += -I$ANS_PATH/librte_ans/include
+CFLAGS += -I$ANS_PATH/librte_anssock/include
 CFLAGS += -I$ANS_PATH/include
 
 

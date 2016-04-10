@@ -23,8 +23,8 @@
 #endif
 
 #include <sys/time.h>
-#include "netdpsock_intf.h"
-#include "netdp_errno.h"
+#include "anssock_intf.h"
+#include "ans_errno.h"
 
 #define _GNU_SOURCE
 #define __USE_GNU
@@ -135,7 +135,7 @@ void opendp_init()
         return;
     }
 
-    rc = netdpsock_init(NULL);
+    rc = anssock_init(NULL);
     assert(0 == rc);
 
     inited = 1;
@@ -162,12 +162,12 @@ int socket(int domain, int type, int protocol)
     }
 
     assert(inited);
-    rc = netdpsock_socket(domain, type, protocol);
+    rc = anssock_socket(domain, type, protocol);
     
     if(rc > 0)
         rc += ANS_FD_BASE;
     
-    ANS_FD_DEBUG("netdp socket fd %d \n", rc);    
+    ANS_FD_DEBUG("ans socket fd %d \n", rc);    
     return rc;
 }
 
@@ -198,7 +198,7 @@ int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
     if (sockfd > ANS_FD_BASE) 
     {
         sockfd -= ANS_FD_BASE;
-        return netdpsock_bind(sockfd, addr, addrlen);
+        return anssock_bind(sockfd, addr, addrlen);
     } 
     else 
     {
@@ -220,7 +220,7 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
     if (sockfd > ANS_FD_BASE) 
     {
         sockfd -= ANS_FD_BASE;
-        return netdpsock_connect(sockfd, addr, addrlen);
+        return anssock_connect(sockfd, addr, addrlen);
     } 
     else 
     {
@@ -268,20 +268,20 @@ ssize_t send (int sockfd, const void *buf, size_t len, int flags)
     if (sockfd > ANS_FD_BASE) 
     {
         sockfd -= ANS_FD_BASE;
-        ANS_FD_DEBUG("netdp send data fd %d , len %lu \n", sockfd, len);
+        ANS_FD_DEBUG("ans send data fd %d , len %lu \n", sockfd, len);
 
         data_size = len;
         n = len;
         data_buf = (char *)buf;
         while (n > 0) 
         {
-            nwrite = netdpsock_send(sockfd, data_buf + data_size - n, n, 0);  
+            nwrite = anssock_send(sockfd, data_buf + data_size - n, n, 0);  
 
             if(nwrite<=0) 
             {   
-                if(errno==NETDP_EAGAIN)  
+                if(errno==ANS_EAGAIN)  
                 {  
-                    usleep(100);  /* no space in netdp stack */
+                    usleep(100);  /* no space in ans stack */
                     continue;  
                 }  
                 else 
@@ -293,7 +293,7 @@ ssize_t send (int sockfd, const void *buf, size_t len, int flags)
 
             if (nwrite < n) 
             {
-                usleep(200);/* no space in netdp stack */
+                usleep(200);/* no space in ans stack */
             }
             n -= nwrite;
             
@@ -328,20 +328,20 @@ ssize_t write(int fd, const void *buf, size_t count)
     {
         fd -= ANS_FD_BASE;
 
-        ANS_FD_DEBUG("netdp write data fd %d , len %lu \n", fd, count);
+        ANS_FD_DEBUG("ans write data fd %d , len %lu \n", fd, count);
 
         data_size = count;
         n = count;
         data = (char *)buf;
         while (n > 0) 
         {
-            nwrite = netdpsock_write(fd, data + data_size - n, n);  
+            nwrite = anssock_write(fd, data + data_size - n, n);  
 
             if(nwrite<=0) 
             {   
-                if(errno==NETDP_EAGAIN)  
+                if(errno==ANS_EAGAIN)  
                 {  
-             //       usleep(200);  /* no space in netdp stack */
+             //       usleep(200);  /* no space in ans stack */
                     continue;  
                 }  
                 else 
@@ -353,7 +353,7 @@ ssize_t write(int fd, const void *buf, size_t count)
 
             if (nwrite < n) 
             {
-         //       usleep(200);/* no space in netdp stack */
+         //       usleep(200);/* no space in ans stack */
             }
             n -= nwrite;
             
@@ -386,13 +386,13 @@ ssize_t recv(int sockfd, void *buf, size_t len, int flags)
     {
         sockfd -= ANS_FD_BASE;
 
-        rc = netdpsock_recv(sockfd, buf, len, flags);
-        if (-1 == rc && NETDP_EAGAIN == errno)
+        rc = anssock_recv(sockfd, buf, len, flags);
+        if (-1 == rc && ANS_EAGAIN == errno)
         {
             errno = EAGAIN;
         }
 
-        ANS_FD_DEBUG("netdp fd %d recv data len %ld \n", sockfd, rc);
+        ANS_FD_DEBUG("ans fd %d recv data len %ld \n", sockfd, rc);
 
         return rc;
     } 
@@ -419,12 +419,12 @@ ssize_t read(int fd, void *buf, size_t count)
     {
         fd -= ANS_FD_BASE;
 
-        rc = netdpsock_read(fd, buf, count);
-        if (-1 == rc && NETDP_EAGAIN == errno)
+        rc = anssock_read(fd, buf, count);
+        if (-1 == rc && ANS_EAGAIN == errno)
         {
             errno = EAGAIN;
         }
-        ANS_FD_DEBUG("netdp fd %d read data len %ld \n", fd, rc);
+        ANS_FD_DEBUG("ans fd %d read data len %ld \n", fd, rc);
         
         return rc;
     } 
@@ -474,7 +474,7 @@ int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t
     {
         sockfd -= ANS_FD_BASE;
 
-        return netdpsock_setsockopt(sockfd, level, optname, optval, optlen);
+        return anssock_setsockopt(sockfd, level, optname, optval, optlen);
     } 
     else 
     {
@@ -494,9 +494,9 @@ int listen(int sockfd, int backlog)
     {
         sockfd -= ANS_FD_BASE;
         
-        ANS_FD_DEBUG("netdp listen fd %d, pid %d \n", sockfd, getpid());
+        ANS_FD_DEBUG("ans listen fd %d, pid %d \n", sockfd, getpid());
         
-        return netdpsock_listen(sockfd, backlog);
+        return anssock_listen(sockfd, backlog);
     }
     else
     {
@@ -520,14 +520,14 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
     {
         sockfd -= ANS_FD_BASE;
 
-        rc = netdpsock_accept(sockfd, addr, addrlen);
+        rc = anssock_accept(sockfd, addr, addrlen);
         addr->sa_family = AF_INET;
 
-        ANS_FD_DEBUG("netdp accept fd %d \n", rc);
+        ANS_FD_DEBUG("ans accept fd %d \n", rc);
         if(rc > 0 )
             rc += ANS_FD_BASE;
         
-        if (-1 == rc && NETDP_EAGAIN == errno) 
+        if (-1 == rc && ANS_EAGAIN == errno) 
         {
             errno = EAGAIN;
         }
@@ -555,15 +555,15 @@ int accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags)
     {
         sockfd -= ANS_FD_BASE;
 
-        rc = netdpsock_accept(sockfd, addr, addrlen);
+        rc = anssock_accept(sockfd, addr, addrlen);
         addr->sa_family = AF_INET;
         
-        ANS_FD_DEBUG("netdp accep4t fd %d, errno %d \n", rc, errno);
+        ANS_FD_DEBUG("ans accep4t fd %d, errno %d \n", rc, errno);
         
         if(rc > 0 )
             rc += ANS_FD_BASE;
 
-        if (-1 == rc && NETDP_EAGAIN == errno)
+        if (-1 == rc && ANS_EAGAIN == errno)
         {
             errno = EAGAIN;
         }
@@ -584,13 +584,13 @@ int accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags)
  */
 int shutdown (int fd, int how)
 {
-    ANS_FD_DEBUG("netdp shutdown fd %d, how %d,  pid %d \n", fd, how, getpid());
+    ANS_FD_DEBUG("ans shutdown fd %d, how %d,  pid %d \n", fd, how, getpid());
 
     if (fd > ANS_FD_BASE) 
     {
         fd -= ANS_FD_BASE;
 
-        return netdpsock_shutdown(fd, how);;
+        return anssock_shutdown(fd, how);;
     } 
     else
     {
@@ -610,9 +610,9 @@ int close(int fd)
     {
         fd -= ANS_FD_BASE;
 
-       ANS_FD_DEBUG("netdp close fd %d, pid %d \n", fd, getpid());
+       ANS_FD_DEBUG("ans close fd %d, pid %d \n", fd, getpid());
 
-        return netdpsock_close(fd);
+        return anssock_close(fd);
     }
     else
     {
@@ -636,11 +636,11 @@ int epoll_create (int size)
 
     if (inited == 1) 
     {
-        rc = netdpsock_epoll_create(size);
+        rc = anssock_epoll_create(size);
         if(rc > 0)
             rc += ANS_FD_BASE;
         
-         ANS_FD_DEBUG("netdp epoll fd %d \n", rc);
+         ANS_FD_DEBUG("ans epoll fd %d \n", rc);
       
     } 
     else 
@@ -683,13 +683,13 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
         epfd -= ANS_FD_BASE;
         fd -= ANS_FD_BASE;
 
-        rc = netdpsock_epoll_ctl(epfd, op, fd, event);
+        rc = anssock_epoll_ctl(epfd, op, fd, event);
     }
     else 
     {
         if(fd > ANS_FD_BASE)
         {
-            printf("skip netdp fd %d \n", fd);
+            printf("skip ans fd %d \n", fd);
             return 0;
         }
 
@@ -705,7 +705,7 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
     if (epfd > ANS_FD_BASE) 
     {
         epfd -= ANS_FD_BASE;
-        rc = netdpsock_epoll_wait(epfd, events, maxevents, timeout);
+        rc = anssock_epoll_wait(epfd, events, maxevents, timeout);
     }
     else
     {
@@ -739,7 +739,7 @@ int ioctl(int fd, int request, void *p)
     {
         fd -= ANS_FD_BASE;
 
-        //return netdpsock_ioctl(fd, request, p);
+        //return anssock_ioctl(fd, request, p);
         return 0;
     } 
     else
@@ -766,7 +766,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
     {
         fd -= ANS_FD_BASE;
         
-        ANS_FD_DEBUG("netdp writev data fd %d , iovcnt %d \n", fd, iovcnt);
+        ANS_FD_DEBUG("ans writev data fd %d , iovcnt %d \n", fd, iovcnt);
 
         rc = 0;
         for (i = 0; i < iovcnt; ++i) 
@@ -776,13 +776,13 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
             n = data_size;
             while (n > 0) 
             {
-                nwrite = netdpsock_send(fd, buf + data_size - n, n, 0);  
+                nwrite = anssock_send(fd, buf + data_size - n, n, 0);  
 
                 if(nwrite<=0) 
                 {   
-                    if(errno==NETDP_EAGAIN)  
+                    if(errno==ANS_EAGAIN)  
                     {  
-                        usleep(200);  /* no space in netdp stack */
+                        usleep(200);  /* no space in ans stack */
                         continue;  
                     }  
                     else 
@@ -794,7 +794,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
 
                 if (nwrite < n) 
                 {
-                    usleep(200);/* no space in netdp stack */
+                    usleep(200);/* no space in ans stack */
                 }
                 n -= nwrite;
                 
@@ -832,7 +832,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
     {
         fd -= ANS_FD_BASE;
 
-        ANS_FD_DEBUG("netdp fd %d readv with iovcnt %d \n", fd, iovcnt);
+        ANS_FD_DEBUG("ans fd %d readv with iovcnt %d \n", fd, iovcnt);
 
         rc = 0;
         for (i = 0; i < iovcnt; ++i) 
@@ -840,10 +840,10 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
             buf_len = iov[i].iov_len;
             buf = iov[i].iov_base;
             
-            nread = netdpsock_read(fd, buf, buf_len);
+            nread = anssock_read(fd, buf, buf_len);
             if(nread <= 0) 
             {   
-                if(errno == NETDP_EAGAIN)  
+                if(errno == ANS_EAGAIN)  
                 {  
                     errno = EAGAIN;
                 }  
@@ -855,13 +855,13 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
                 return ((rc > 0)? rc : nread);  
             }  
 
-            ANS_FD_DEBUG("netdp fd %d readv data len %d iov index %d \n", fd, nread, i);
+            ANS_FD_DEBUG("ans fd %d readv data len %d iov index %d \n", fd, nread, i);
       
             rc += nread;
             
         }
 
-        ANS_FD_DEBUG("netdp fd %d readv data len %ld \n", fd, rc);
+        ANS_FD_DEBUG("ans fd %d readv data len %ld \n", fd, rc);
         
         return rc;
     } 
