@@ -146,6 +146,7 @@ root@h163:~#
 ####Notes
 * ANS tcp stack support reuseport, so can enable nginx reuseport feature, multi nginx can listen on same port.
 * proxy_pass is supported.
+* In order to improve ANS performance, you shall isolate ANS'lcore from kernel by isolcpus and isolcate interrupt from ANS's lcore by update /proc/irq/default_smp_affinity file.
 
 ####Support
 -------
