@@ -86,7 +86,7 @@ static int (*real_epoll_wait)(int, struct epoll_event *, int, int);
  * @return  
  *
  */
-void opendp_init()
+void ans_mod_init()
 {
     int rc;
        
@@ -260,8 +260,6 @@ int getpeername (__attribute__((unused))int __fd, __attribute__((unused)) __SOCK
 ssize_t send (int sockfd, const void *buf, size_t len, int flags)
 {
     ssize_t n;
-    int nwrite, data_size;
-    char *data_buf;
     
     ANS_FD_DEBUG("send data fd %d , len %lu \n", sockfd, len);
 
@@ -270,36 +268,13 @@ ssize_t send (int sockfd, const void *buf, size_t len, int flags)
         sockfd -= ANS_FD_BASE;
         ANS_FD_DEBUG("ans send data fd %d , len %lu \n", sockfd, len);
 
-        data_size = len;
-        n = len;
-        data_buf = (char *)buf;
-        while (n > 0) 
-        {
-            nwrite = anssock_send(sockfd, data_buf + data_size - n, n, 0);  
+        sockfd -= ANS_FD_BASE;
 
-            if(nwrite<=0) 
-            {   
-                if(errno==ANS_EAGAIN)  
-                {  
-                    usleep(100);  /* no space in ans stack */
-                    continue;  
-                }  
-                else 
-                {  
-                    printf("write error: errno = %d, strerror = %s \n" , errno, strerror(errno));  
-                    return(nwrite);  
-                }  
-            }  
+        n = anssock_send(sockfd, buf, len, flags);  
+        
+        ANS_FD_DEBUG("ans send: fd %d , len %lu, return value:%ld, errno:%d, strerror = %s \n", sockfd, len, n, errno, strerror(errno));
 
-            if (nwrite < n) 
-            {
-                usleep(200);/* no space in ans stack */
-            }
-            n -= nwrite;
-            
-        }
-
-        return len;
+        return n;
 
     }
     else 
@@ -319,8 +294,6 @@ ssize_t send (int sockfd, const void *buf, size_t len, int flags)
 ssize_t write(int fd, const void *buf, size_t count)
 {
     ssize_t n;
-    int nwrite, data_size;
-    char *data;
 
 //    ANS_FD_DEBUG("write data fd %d , len %lu \n", fd, count);
 
@@ -328,38 +301,11 @@ ssize_t write(int fd, const void *buf, size_t count)
     {
         fd -= ANS_FD_BASE;
 
-        ANS_FD_DEBUG("ans write data fd %d , len %lu \n", fd, count);
+        n = anssock_write(fd, buf, count);
+        
+        ANS_FD_DEBUG("ans write: fd %d , len %lu, return value:%ld, errno:%d, strerror = %s \n", fd, count, n, errno, strerror(errno));
 
-        data_size = count;
-        n = count;
-        data = (char *)buf;
-        while (n > 0) 
-        {
-            nwrite = anssock_write(fd, data + data_size - n, n);  
-
-            if(nwrite<=0) 
-            {   
-                if(errno==ANS_EAGAIN)  
-                {  
-             //       usleep(200);  /* no space in ans stack */
-                    continue;  
-                }  
-                else 
-                {  
-                    printf("write error: errno = %d, strerror = %s \n" , errno, strerror(errno));  
-                    return(nwrite);  
-                }  
-            }  
-
-            if (nwrite < n) 
-            {
-         //       usleep(200);/* no space in ans stack */
-            }
-            n -= nwrite;
-            
-        }
-
-        return count;
+        return n;
 
     }
     else 
@@ -367,7 +313,7 @@ ssize_t write(int fd, const void *buf, size_t count)
 
         n = real_write(fd, buf, count);
         
-     //  ANS_FD_DEBUG("linux write data fd %d , len %ld \n", fd, count);
+        ANS_FD_DEBUG("linux write: fd %d , len %lu, return value:%ld, errno:%d, strerror = %s \n", fd, count, n, errno, strerror(errno));
      
         return n;
     }
@@ -420,11 +366,8 @@ ssize_t read(int fd, void *buf, size_t count)
         fd -= ANS_FD_BASE;
 
         rc = anssock_read(fd, buf, count);
-        if (-1 == rc && ANS_EAGAIN == errno)
-        {
-            errno = EAGAIN;
-        }
-        ANS_FD_DEBUG("ans fd %d read data len %ld \n", fd, rc);
+
+        ANS_FD_DEBUG("ans fd %d read data len %ld, %d \n", fd, rc, errno);
         
         return rc;
     } 
@@ -632,7 +575,7 @@ int epoll_create (int size)
 {
     int rc;
 
-    ANS_FD_DEBUG("epoll create start \n");
+    ANS_FD_DEBUG("epoll create  start, EPOLL_CTL_ADD %d ,EPOLL_CTL_DEL %d, EPOLLOUT 0x%x, EPOLLIN:0x%x \n", EPOLL_CTL_ADD, EPOLL_CTL_DEL, EPOLLOUT, EPOLLIN);
 
     if (inited == 1) 
     {
@@ -671,6 +614,7 @@ int epoll_create1 (__attribute__((unused))int __flags)
 int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
 {
     int rc;
+
     ANS_FD_DEBUG("epoll ctl  start, epfd %d ,op %d, fd %d, event:0x%x \n", epfd, op, fd, event->events);
 
     if (epfd > ANS_FD_BASE) 
@@ -705,10 +649,15 @@ int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
     if (epfd > ANS_FD_BASE) 
     {
         epfd -= ANS_FD_BASE;
+
+     //   ANS_FD_DEBUG("ans epoll_wait: fd %d maxevents %d , timeout %d \n", epfd, maxevents, timeout);       
+ 
         rc = anssock_epoll_wait(epfd, events, maxevents, timeout);
     }
     else
     {
+      //  ANS_FD_DEBUG("linux epoll_wait: fd %d maxevents %d , timeout %d \n", epfd, maxevents, timeout);       
+
         rc = real_epoll_wait(epfd, events, maxevents, timeout);
     }
     return rc;

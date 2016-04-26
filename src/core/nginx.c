@@ -23,7 +23,7 @@ static char *ngx_set_cpu_affinity(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 static char *ngx_set_worker_processes(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
-void opendp_init();
+void ans_mod_init();
 
 
 static ngx_conf_enum_t  ngx_debug_points[] = {
@@ -261,8 +261,8 @@ main(int argc, char *const *argv)
 
     /* TODO */ ngx_max_sockets = -1;
 
-    /* opendp */
-    opendp_init();
+    /* ans module */
+    ans_mod_init();
 
     ngx_time_init();
 
