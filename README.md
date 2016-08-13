@@ -146,6 +146,13 @@ root@h163:~#
 * ANS tcp stack support reuseport, so can enable nginx reuseport feature, multi nginx can listen on same port.
 * proxy_pass is supported.
 * In order to improve ANS performance, you shall isolate ANS'lcore from kernel by isolcpus and isolcate interrupt from ANS's lcore by update /proc/irq/default_smp_affinity file.
+* You shall include dpdk libs as below way because mempool lib has __attribute__((constructor, used)) in dpdk-16.07 version, otherwise your application would coredump.
+```
+   $(RTE_ANS)/librte_anssock/librte_anssock.a \
+  -L$(RTE_SDK)/$(RTE_TARGET)/lib \
+  -Wl,--whole-archive -Wl,-lrte_mbuf -Wl,-lrte_mempool -Wl,-lrte_ring -Wl,-lrte_eal -Wl,--no-whole-archive -Wl,-export-dynamic \
+
+```
 
 ####Support
 -------
