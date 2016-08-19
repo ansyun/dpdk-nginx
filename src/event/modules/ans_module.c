@@ -268,8 +268,6 @@ ssize_t send (int sockfd, const void *buf, size_t len, int flags)
         sockfd -= ANS_FD_BASE;
         ANS_FD_DEBUG("ans send data fd %d , len %lu \n", sockfd, len);
 
-        sockfd -= ANS_FD_BASE;
-
         n = anssock_send(sockfd, buf, len, flags);  
         
         ANS_FD_DEBUG("ans send: fd %d , len %lu, return value:%ld, errno:%d, strerror = %s \n", sockfd, len, n, errno, strerror(errno));
