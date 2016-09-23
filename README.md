@@ -142,6 +142,25 @@ Saving to: ‘nginx_big_data.1’
 
 root@h163:~#
 ```
+*  dpdk-nginx QPS performance
+```
+CPU:Intel(R) Xeon(R) CPU E5-2670 0 @ 2.60GHz.
+NIC:82599ES 10-Gigabit SFI/SFP+ Network Connection (rev 01) 
+ANS run on a lcore.
+6 dpdk-nginx run on ANS.
+
+./wrk -c 5k -d30s -t16  http://10.0.0.2/
+Running 30s test @ http://10.0.0.2/
+  16 threads and 5000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    41.93ms  119.14ms   1.73s    92.61%
+    Req/Sec    18.16k     1.73k   26.34k    76.00%
+  8700983 requests in 30.11s, 6.88GB read
+Requests/sec: 288956.57
+Transfer/sec:    233.95MB
+
+```
+
 ####Notes
 * ANS tcp stack support reuseport, so can enable nginx reuseport feature, multi nginx can listen on same port.
 * proxy_pass is supported.
