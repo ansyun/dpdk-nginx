@@ -16,7 +16,7 @@ $ export RTE_TARGET=x86_64-native-linuxapp-gcc
 $ git clone https://github.com/opendp/dpdk-ans.git
 $ export RTE_ANS=/home/mytest/dpdk-ans
 $ make
-$ sudo ./build/ans -c 0x1 -n 1  -- -p 0x1 --config="(0,0,0)"
+$ sudo ./build/ans -c 0x2 -n 1  -- -p 0x1 --config="(0,0,1)"
 EAL: Detected lcore 0 as core 0 on socket 0
 EAL: Detected lcore 1 as core 1 on socket 0
 EAL: Support maximum 128 logical core(s) by configuration.
@@ -43,7 +43,7 @@ Refer to [Getting Started Guide for Linux](http://dpdk.org/doc/guides/linux_gsg/
 
 *  Startup ANS TCP/IP stack
 ```
-$ sudo ./build/ans -c 0x1 -n 1  -- -p 0x1 --config="(0,0,0)"
+$ sudo ./build/ans -c 0x2 -n 1  -- -p 0x1 --config="(0,0,1)"
 EAL: Detected lcore 0 as core 0 on socket 0
 EAL: Detected lcore 1 as core 1 on socket 0
 EAL: Support maximum 128 logical core(s) by configuration.
