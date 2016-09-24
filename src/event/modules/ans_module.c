@@ -73,6 +73,8 @@ static ssize_t (*real_read)(int, void *, size_t );
 static ssize_t (*real_readv)(int, const struct iovec *, int);
 
 static int (*real_setsockopt)(int, int, int, const void *, socklen_t);
+static int (*real_getpeername)(int , struct sockaddr *, socklen_t *);
+static int (*real_getsockname)(int , struct sockaddr *, socklen_t *);
 
 static int (*real_ioctl)(int, int, void *);
 
@@ -111,6 +113,8 @@ void ans_mod_init()
     INIT_FUNCTION(readv);
 
     INIT_FUNCTION(setsockopt);
+    INIT_FUNCTION(getpeername);
+    INIT_FUNCTION(getsockname);
 
     INIT_FUNCTION(ioctl);
 
@@ -118,10 +122,6 @@ void ans_mod_init()
     INIT_FUNCTION(epoll_ctl);
     INIT_FUNCTION(epoll_wait);
    /*    
-    INIT_FUNCTION();
-    INIT_FUNCTION();
-    INIT_FUNCTION();
-    INIT_FUNCTION();
     INIT_FUNCTION();
     INIT_FUNCTION();
     INIT_FUNCTION();
@@ -227,28 +227,6 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
         return real_connect(sockfd, addr, addrlen);
     }
     
-}
-
-/**
- * @param 
- *
- * @return  
- *
- */
-int getsockname (__attribute__((unused))int __fd, __attribute__((unused))__SOCKADDR_ARG __addr, __attribute__((unused)) socklen_t *__restrict __len)
-{
-    return -1;
-}
-
-/**
- * @param 
- *
- * @return  
- *
- */
-int getpeername (__attribute__((unused))int __fd, __attribute__((unused)) __SOCKADDR_ARG __addr, __attribute__((unused)) socklen_t *__restrict __len)
-{
-    return -1;
 }
 
 /**
@@ -396,19 +374,30 @@ ssize_t sendto(__attribute__((unused)) int sockfd, __attribute__((unused))const 
  * @return  
  *
  */
-
  ssize_t recvfrom(__attribute__((unused))int sockfd, __attribute__((unused))void *buf, __attribute__((unused))size_t len, __attribute__((unused))int flags,
                         __attribute__((unused))struct sockaddr *src_addr, __attribute__((unused))socklen_t *addrlen)
 {
     return -1;
 }
 
+/**
+ * @param 
+ *
+ * @return  
+ *
+ */
  int getsockopt(__attribute__((unused))int sockfd, __attribute__((unused))int level, __attribute__((unused))int optname, 
         __attribute__((unused))void *optval, __attribute__((unused))socklen_t *optlen)
 {
     return -1;
 }
 
+/**
+ * @param 
+ *
+ * @return  
+ *
+ */
 int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
 {
     if (sockfd > ANS_FD_BASE) 
@@ -422,6 +411,47 @@ int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t
         return real_setsockopt(sockfd, level, optname, optval, optlen);
     }
 }
+
+/**
+ * @param 
+ *
+ * @return  
+ *
+ */
+int getpeername(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+{
+    if (sockfd > ANS_FD_BASE) 
+    {
+        sockfd -= ANS_FD_BASE;
+
+        return anssock_getpeername(sockfd, addr, addrlen);
+    } 
+    else 
+    {
+        return real_getpeername(sockfd, addr, addrlen);
+    }
+}
+
+/**
+ * @param 
+ *
+ * @return  
+ *
+ */
+int getsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+{
+    if (sockfd > ANS_FD_BASE) 
+    {
+        sockfd -= ANS_FD_BASE;
+
+        return anssock_getsockname(sockfd, addr, addrlen);
+    } 
+    else 
+    {
+        return real_getsockname(sockfd, addr, addrlen);
+    }
+}
+
 
 /**
  * @param 
@@ -467,11 +497,6 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
         ANS_FD_DEBUG("ans accept fd %d \n", rc);
         if(rc > 0 )
             rc += ANS_FD_BASE;
-        
-        if (-1 == rc && ANS_EAGAIN == errno) 
-        {
-            errno = EAGAIN;
-        }
     } 
     else 
     {
@@ -504,10 +529,6 @@ int accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags)
         if(rc > 0 )
             rc += ANS_FD_BASE;
 
-        if (-1 == rc && ANS_EAGAIN == errno)
-        {
-            errno = EAGAIN;
-        }
     } 
     else 
     {
@@ -704,14 +725,36 @@ int ioctl(int fd, int request, void *p)
  */
 ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
 {
+    int i;
     ssize_t rc;
+    int nwrite = 0, data_size;
+    char *buf;
 
     if (fd > ANS_FD_BASE) 
     {
         fd -= ANS_FD_BASE;
         
         ANS_FD_DEBUG("ans writev data fd %d , iovcnt %d \n", fd, iovcnt);
-        rc = anssock_writev(fd, iov, iovcnt);
+
+        rc = 0;
+        for (i = 0; i < iovcnt; ++i) 
+        {
+            data_size = iov[i].iov_len;
+            buf = iov[i].iov_base;
+
+            nwrite = anssock_send(fd, buf, data_size, 0);  
+            if (nwrite <= 0) 
+                return nwrite;
+
+            if(nwrite < data_size)
+            {
+               rc += nwrite;
+               return rc;
+            }
+
+           rc += nwrite;
+
+        }
     }
     else 
     {
@@ -730,14 +773,46 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
  */
  ssize_t readv(int fd, const struct iovec *iov, int iovcnt)
 {
+    int i;
+    int nread = 0, buf_len;
     ssize_t rc;
+    char *buf;
 
     if (fd > ANS_FD_BASE) 
     {
         fd -= ANS_FD_BASE;
 
         ANS_FD_DEBUG("ans fd %d readv with iovcnt %d \n", fd, iovcnt);
-				rc =anssock_readv(fd, iov, iovcnt);
+
+        rc = 0;
+        for (i = 0; i < iovcnt; ++i) 
+        {
+            buf_len = iov[i].iov_len;
+            buf = iov[i].iov_base;
+            
+            nread = anssock_read(fd, buf, buf_len);
+            if(nread <= 0) 
+            {   
+                if(errno == ANS_EAGAIN)  
+                {  
+                    errno = EAGAIN;
+                }  
+                else 
+                {  
+                    if(nread < 0)
+                        printf("readv error: rc=%ld, nread=%d,  errno=%d, strerror=%s \n", rc, nread, errno, strerror(errno));  
+                }  
+                return ((rc > 0)? rc : nread);  
+            }  
+
+            ANS_FD_DEBUG("ans fd %d readv data len %d iov index %d \n", fd, nread, i);
+      
+            rc += nread;
+            
+        }
+
+        ANS_FD_DEBUG("ans fd %d readv data len %ld \n", fd, rc);
+        
         return rc;
     } 
     else
