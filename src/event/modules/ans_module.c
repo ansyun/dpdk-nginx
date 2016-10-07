@@ -725,36 +725,14 @@ int ioctl(int fd, int request, void *p)
  */
 ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
 {
-    int i;
     ssize_t rc;
-    int nwrite = 0, data_size;
-    char *buf;
 
     if (fd > ANS_FD_BASE) 
     {
         fd -= ANS_FD_BASE;
         
         ANS_FD_DEBUG("ans writev data fd %d , iovcnt %d \n", fd, iovcnt);
-
-        rc = 0;
-        for (i = 0; i < iovcnt; ++i) 
-        {
-            data_size = iov[i].iov_len;
-            buf = iov[i].iov_base;
-
-            nwrite = anssock_send(fd, buf, data_size, 0);  
-            if (nwrite <= 0) 
-                return nwrite;
-
-            if(nwrite < data_size)
-            {
-               rc += nwrite;
-               return rc;
-            }
-
-           rc += nwrite;
-
-        }
+        rc = anssock_writev(fd, iov, iovcnt);
     }
     else 
     {
@@ -773,46 +751,14 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
  */
  ssize_t readv(int fd, const struct iovec *iov, int iovcnt)
 {
-    int i;
-    int nread = 0, buf_len;
     ssize_t rc;
-    char *buf;
 
     if (fd > ANS_FD_BASE) 
     {
         fd -= ANS_FD_BASE;
 
         ANS_FD_DEBUG("ans fd %d readv with iovcnt %d \n", fd, iovcnt);
-
-        rc = 0;
-        for (i = 0; i < iovcnt; ++i) 
-        {
-            buf_len = iov[i].iov_len;
-            buf = iov[i].iov_base;
-            
-            nread = anssock_read(fd, buf, buf_len);
-            if(nread <= 0) 
-            {   
-                if(errno == ANS_EAGAIN)  
-                {  
-                    errno = EAGAIN;
-                }  
-                else 
-                {  
-                    if(nread < 0)
-                        printf("readv error: rc=%ld, nread=%d,  errno=%d, strerror=%s \n", rc, nread, errno, strerror(errno));  
-                }  
-                return ((rc > 0)? rc : nread);  
-            }  
-
-            ANS_FD_DEBUG("ans fd %d readv data len %d iov index %d \n", fd, nread, i);
-      
-            rc += nread;
-            
-        }
-
-        ANS_FD_DEBUG("ans fd %d readv data len %ld \n", fd, rc);
-        
+				rc =anssock_readv(fd, iov, iovcnt);
         return rc;
     } 
     else
