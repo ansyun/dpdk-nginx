@@ -15,6 +15,8 @@ $ export RTE_TARGET=x86_64-native-linuxapp-gcc
 ```
 $ git clone https://github.com/opendp/dpdk-ans.git
 $ export RTE_ANS=/home/mytest/dpdk-ans
+$ ./install_deps.sh
+$ cd ans
 $ make
 $ sudo ./build/ans -c 0x2 -n 1  -- -p 0x1 --config="(0,0,1)"
 EAL: Detected lcore 0 as core 0 on socket 0
