@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) JiaKai (jiakai1000@gmail.com)
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
