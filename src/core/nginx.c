@@ -184,6 +184,9 @@ main(int argc, char *const *argv)
     ngx_conf_dump_t  *cd;
     ngx_core_conf_t  *ccf;
 
+    /* ans module */
+    ans_mod_init();
+
     ngx_debug_init();
 
     if (ngx_strerror_init() != NGX_OK) {
@@ -260,9 +263,6 @@ main(int argc, char *const *argv)
     }
 
     /* TODO */ ngx_max_sockets = -1;
-
-    /* ans module */
-    ans_mod_init();
 
     ngx_time_init();
 
