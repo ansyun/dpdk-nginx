@@ -178,4 +178,4 @@ Transfer/sec:    233.95MB
 
 #### Support
 -------
-For free support, please use ANS team mail list at zimeiw@163.com, or QQ Group:86883521, or https://dpdk-ans.slack.com.
+For free support, please use ANS team mail list at anssupport@163.com, or QQ Group:86883521, or https://dpdk-ans.slack.com.
