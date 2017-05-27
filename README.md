@@ -11,9 +11,9 @@ $ make install T=x86_64-native-linuxapp-gcc
 $ export RTE_SDK=/home/mytest/dpdk
 $ export RTE_TARGET=x86_64-native-linuxapp-gcc
 ```
-*  Build dpdk and ANS following the [ANS wiki](https://github.com/opendp/dpdk-ans/wiki/Compile-APP-with-netdp) 
+*  Build dpdk and ANS following the [ANS wiki](https://github.com/ansyun/dpdk-ans/wiki/Compile-APP-with-netdp) 
 ```
-$ git clone https://github.com/opendp/dpdk-ans.git
+$ git clone https://github.com/ansyun/dpdk-ans.git
 $ export RTE_ANS=/home/mytest/dpdk-ans
 $ ./install_deps.sh
 $ cd ans
@@ -32,7 +32,7 @@ EAL: Ask a virtual area of 0x15400000 bytes
 *  Download dpdk-nginx, build dpdk-nginx
 
 ```
-$ git clone https://github.com/opendp/dpdk-nginx.git
+$ git clone https://github.com/ansyun/dpdk-nginx.git
 $ ./configure  --with-http_dav_module
 $ make
 $ make install   # default install dir is /usr/local/nginx
