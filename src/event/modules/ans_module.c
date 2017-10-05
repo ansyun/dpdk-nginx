@@ -65,7 +65,6 @@
 #define __USE_GNU
 
 #include <unistd.h>
-#include <sched.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/syscall.h>
@@ -793,7 +792,7 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
         fd -= ANS_FD_BASE;
 
         ANS_FD_DEBUG("ans fd %d readv with iovcnt %d \n", fd, iovcnt);
-				rc =anssock_readv(fd, iov, iovcnt);
+        rc =anssock_readv(fd, iov, iovcnt);
         return rc;
     } 
     else
