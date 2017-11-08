@@ -17,6 +17,17 @@ mkdir -p $NGX_OBJS/src/core $NGX_OBJS/src/event $NGX_OBJS/src/event/modules \
 ngx_objs_dir=$NGX_OBJS$ngx_regex_dirsep
 ngx_use_pch=`echo $NGX_USE_PCH | sed -e "s/\//$ngx_regex_dirsep/g"`
 
+if [ $RTE_SDK ] && [ $RTE_TARGET ] && [ $RTE_ANS ]; then
+    ANS_PATH=$RTE_ANS
+else
+    echo "Please define RTE_SDK RTE_TARGET RTE_ANS environment variable"
+    exit 1
+fi
+
+CORE_LIBS="$CORE_LIBS -L$RTE_SDK/$RTE_TARGET/lib/"
+CORE_LIBS="$CORE_LIBS $ANS_PATH/librte_anssock/librte_anssock.a"
+CORE_LIBS="$CORE_LIBS -Wl,--whole-archive -Wl,-lrte_mbuf -Wl,-lrte_mempool_ring -Wl,-lrte_mempool -Wl,-lrte_ring -Wl,-lrte_eal -Wl,--no-whole-archive -Wl,-export-dynamic"
+CORE_LIBS="$CORE_LIBS $NGX_LIBDL -lrt"
 
 cat << END                                                     > $NGX_MAKEFILE
 
@@ -24,6 +35,12 @@ CC =	$CC
 CFLAGS = $CFLAGS
 CPP =	$CPP
 LINK =	$LINK
+
+
+CFLAGS += -I$ANS_PATH/librte_ans/include
+CFLAGS += -I$ANS_PATH/librte_anssock/include
+CFLAGS += -I$ANS_PATH/include
+
 
 END
 

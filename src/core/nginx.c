@@ -31,6 +31,9 @@ static void ngx_unload_module(void *data);
 #endif
 
 
+void ans_mod_init();
+
+
 static ngx_conf_enum_t  ngx_debug_points[] = {
     { ngx_string("stop"), NGX_DEBUG_POINTS_STOP },
     { ngx_string("abort"), NGX_DEBUG_POINTS_ABORT },
@@ -200,6 +203,9 @@ main(int argc, char *const *argv)
     ngx_cycle_t      *cycle, init_cycle;
     ngx_conf_dump_t  *cd;
     ngx_core_conf_t  *ccf;
+
+    /* ans module */
+    ans_mod_init();
 
     ngx_debug_init();
 
