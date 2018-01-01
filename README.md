@@ -65,16 +65,16 @@ EAL: Detected lcore 1 as core 1 on socket 0
 ```
 *  Test http connection by ab tool
 ```
-CPU:Intel(R) Xeon(R) CPU E5-2430 0 @ 2.20GHz.
-NIC:Intel Corporation 82576 Gigabit Network Connection (rev 01) 
+CPU:Intel(R) Xeon(R) CPU E5-2609 v4 @ 1.70GHz.
+NIC:Ethernet controller: Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection (rev 01) 
 ANS run on a lcore.
 
-root@h163:~# ab -n 30000 -c 500 2.2.2.2:80/
-This is ApacheBench, Version 2.3 <$Revision: 1528965 $>
+# ab -n 30000 -c 500 10.0.0.2:80/
+This is ApacheBench, Version 2.3 <$Revision: 1796539 $>
 Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
 Licensed to The Apache Software Foundation, http://www.apache.org/
 
-Benchmarking 2.2.2.2 (be patient)
+Benchmarking 10.0.0.2 (be patient)
 Completed 3000 requests
 Completed 6000 requests
 Completed 9000 requests
@@ -88,41 +88,41 @@ Completed 30000 requests
 Finished 30000 requests
 
 
-Server Software:        nginx/1.9.5
-Server Hostname:        2.2.2.2
+Server Software:        nginx/1.12.2
+Server Hostname:        10.0.0.2
 Server Port:            80
 
 Document Path:          /
 Document Length:        612 bytes
 
 Concurrency Level:      500
-Time taken for tests:   0.965 seconds
+Time taken for tests:   0.851 seconds
 Complete requests:      30000
 Failed requests:        0
-Total transferred:      25320000 bytes
+Total transferred:      25350000 bytes
 HTML transferred:       18360000 bytes
-Requests per second:    31092.43 [#/sec] (mean)
-Time per request:       16.081 [ms] (mean)
-Time per request:       0.032 [ms] (mean, across all concurrent requests)
-Transfer rate:          25626.97 [Kbytes/sec] received
+Requests per second:    35262.84 [#/sec] (mean)
+Time per request:       14.179 [ms] (mean)
+Time per request:       0.028 [ms] (mean, across all concurrent requests)
+Transfer rate:          29098.73 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
-Connect:        0    2   1.1      1       7
-Processing:     2   14   5.1     14      30
-Waiting:        2   14   5.0     14      29
-Total:          4   16   4.7     16      30
+Connect:        3    6   0.9      6      10
+Processing:     2    8   1.5      8      17
+Waiting:        2    6   1.5      7      15
+Total:          8   14   1.8     14      24
 
 Percentage of the requests served within a certain time (ms)
-  50%     16
-  66%     18
-  75%     19
-  80%     20
-  90%     22
-  95%     24
-  98%     25
-  99%     27
- 100%     30 (longest request)
+  50%     14
+  66%     14
+  75%     15
+  80%     15
+  90%     16
+  95%     17
+  98%     18
+  99%     19
+ 100%     24 (longest request)
 
 ```
 *  Test file download by wget tool
