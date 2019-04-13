@@ -163,8 +163,9 @@ Transfer/sec:    233.95MB
 
 ```
 *  dpdk-nginx CPS performance
- TCP short connection test. Test cycle(TCP connection established -> http get -> TCP closed)
 ```
+TCP short connection test. Test cycle(TCP connection established -> http get -> TCP closed)
+
 # ./wrk --timeout=1 --latency -H "Connection: close" -t8 -c100 -d100s http://10.0.0.2
 Running 2m test @ http://10.0.0.2
   8 threads and 100 connections
