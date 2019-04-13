@@ -193,6 +193,17 @@ Transfer/sec:     62.87MB
   -Wl,--whole-archive -Wl,-lrte_mbuf -Wl,-lrte_mempool -Wl,-lrte_ring -Wl,-lrte_eal -Wl,--no-whole-archive -Wl,-export-dynamic \
 
 ```
+* In order to establish mass TCP connection in linux kernel, shall change these parameters as below.
+```
+vi /etc/sysctl.conf
+#/sbin/sysctl -p
+
+net.ipv4.ip_local_port_range = 1024 65535
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_tw_recycle = 1
+net.ipv4.tcp_fin_timeout = 30
+```
 
 #### Support
 -------
