@@ -162,6 +162,24 @@ Requests/sec: 288956.57
 Transfer/sec:    233.95MB
 
 ```
+*  dpdk-nginx CPS performance
+ TCP short connection test. Test cycle(TCP connection established -> http get -> TCP closed)
+```
+# ./wrk --timeout=1 --latency -H "Connection: close" -t8 -c100 -d100s http://10.0.0.2
+Running 2m test @ http://10.0.0.2
+  8 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     2.17ms   17.91ms 363.58ms   99.08%
+    Req/Sec     9.86k   635.78    12.98k    96.64%
+  Latency Distribution
+     50%  648.00us
+     75%  695.00us
+     90%  748.00us
+     99%    4.94ms
+  7802119 requests in 1.67m, 6.14GB read
+Requests/sec:  78019.06
+Transfer/sec:     62.87MB
+```
 
 #### Notes
 * Shall use the same gcc version to compile your application.
