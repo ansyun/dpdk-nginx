@@ -31,7 +31,7 @@ static void ngx_unload_module(void *data);
 #endif
 
 
-void ans_mod_init();
+void ans_mod_init(char *file_prefix);
 
 
 static ngx_conf_enum_t  ngx_debug_points[] = {
@@ -205,7 +205,7 @@ main(int argc, char *const *argv)
     ngx_core_conf_t  *ccf;
 
     /* ans module */
-    ans_mod_init();
+    ans_mod_init(NULL);
 
     ngx_debug_init();
 

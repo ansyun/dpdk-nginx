@@ -72,12 +72,12 @@
 
 
 /* 
- *  opendp socket fd large than linux "ulimit -n " value
+ *  ANS socket fd large than linux "ulimit -n " value
  *  
 */
 #define ANS_FD_BASE 2000
 
-/* 1: redis socket will go through opendp stack, 0: go through linux stack */
+/* 1: redis socket will go through ANS stack, 0: go through linux stack */
 int ans_sock_enable = 1; 
 
 int ansfd_debug_flag = 0;
@@ -122,7 +122,7 @@ static int (*real_epoll_wait)(int, struct epoll_event *, int, int);
  * @return  
  *
  */
-void ans_mod_init()
+void ans_mod_init(char *file_prefix)
 {
     int rc;
        
@@ -140,26 +140,18 @@ void ans_mod_init()
     INIT_FUNCTION(recv);
     INIT_FUNCTION(send);
     INIT_FUNCTION(shutdown);
-    
     INIT_FUNCTION(writev);
     INIT_FUNCTION(write);
     INIT_FUNCTION(read);
     INIT_FUNCTION(readv);
-
     INIT_FUNCTION(setsockopt);
     INIT_FUNCTION(getpeername);
     INIT_FUNCTION(getsockname);
-
     INIT_FUNCTION(ioctl);
 
     INIT_FUNCTION(epoll_create);
     INIT_FUNCTION(epoll_ctl);
     INIT_FUNCTION(epoll_wait);
-   /*    
-    INIT_FUNCTION();
-    INIT_FUNCTION();
-    INIT_FUNCTION();
-    */
 
 #undef INIT_FUNCTION
 
@@ -169,10 +161,16 @@ void ans_mod_init()
         return;
     }
 
-    rc = anssock_init(NULL);
+    rc = anssock_init(file_prefix);
+    if(rc != ANS_EOK)
+    {
+        printf("anssock init failed \n");
+    }
     assert(0 == rc);
 
     inited = 1;
+
+    return;
 }
 
 /**
@@ -194,8 +192,8 @@ int socket(int domain, int type, int protocol)
 
         return rc;
     }
-
-    assert(inited);
+	
+	assert(inited);
     rc = anssock_socket(domain, type, protocol);
     
     if(rc > 0)
@@ -801,7 +799,6 @@ ssize_t writev(int fd, const struct iovec *iov, int iovcnt)
 
         return rc;
     }
-
 
 }
 
